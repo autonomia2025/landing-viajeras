@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  name           String
+  slug           String         @unique
+  description    String
+  price          Int
+  compareAtPrice Int?
+  images         String
+  category       String
+  categorySlug   String
+  stock          Int            @default(0)
+  featured       Boolean        @default(false)
+  isNew          Boolean        @default(false)
+  sku            String         @unique
+  tags           String         @default("")
+  rating         Float          @default(0)
+  reviewCount    Int            @default(0)
+  active         Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  variants       Variant[]
+  orderItems     OrderItem[]
+  reviews        Review[]
+}
+
+model Variant {
+  id            String  @id @default(cuid())
+  productId     String
+  name          String
+  value         String
+  stock         Int     @default(0)
+  priceModifier Int     @default(0)
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  phone     String?
+  rut       String?
+  createdAt DateTime  @default(now())
+  orders    Order[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerId      String
+  status          String      @default("nuevo")
+  paymentMethod   String
+  paymentStatus   String      @default("pendiente")
+  subtotal        Int
+  shippingCost    Int         @default(3990)
+  discount        Int         @default(0)
+  total           Int
+  shippingAddress String
+  trackingNumber  String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  customer        Customer    @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  quantity  Int
+  price     Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  author    String
+  email     String?
+  rating    Int
+  comment   String
+  verified  Boolean  @default(false)
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model SiteConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
